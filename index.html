@@ -2,272 +2,272 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Дія — Документи</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дія — Реєстр Документів 2026</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         :root {
-            --bg: #000000;
-            --surface: #1c1c1e;
+            --bg: #000;
+            --surface: #111112;
+            --card-grad: linear-gradient(145deg, #2c2c2e 0%, #121214 100%);
+            --accent: #00c7be;
+            --text-main: #ffffff;
+            --text-dim: #8e8e93;
             --border: rgba(255, 255, 255, 0.1);
-            --cyan: #00c7be;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        nav {
+            height: 85px; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
+            display: flex; align-items: center; justify-content: center;
+            border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; z-index: 1000;
+        }
+        .nav-pill { display: flex; gap: 8px; background: var(--surface); padding: 5px; border-radius: 25px; border: 1px solid var(--border); }
+        .nav-link { padding: 12px 22px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-dim); transition: 0.3s; font-size: 14px; }
+        .nav-link.active { background: var(--accent); color: #000; }
+
+        #main-scroll { flex: 1; width: 100%; overflow-y: auto; padding-bottom: 120px; }
+        .container { width: 100%; max-width: 550px; margin: 0 auto; padding: 20px; }
+        h1 { font-size: 34px; font-weight: 900; margin-bottom: 25px; letter-spacing: -1px; }
+
+        .doc-card-preview {
+            background: var(--card-grad); border-radius: 28px; padding: 25px; margin-bottom: 15px;
+            border: 1px solid var(--border); cursor: pointer; transition: 0.2s;
+        }
+        .preview-header { color: var(--accent); font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+        .preview-name { font-size: 22px; font-weight: 800; text-transform: uppercase; }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; z-index: 2000; display: none; flex-direction: column;
+            overflow-y: auto; padding: 20px;
+        }
+        .modal.active { display: flex; }
         
-        /* Базовые стили для body */
-        body { 
-            background: #111; 
-            color: #fff; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
-            transition: background 0.3s;
-        }
+        .info-block { background: var(--surface); border-radius: 22px; padding: 20px; margin-top: 15px; border: 1px solid var(--border); }
+        .info-row { border-bottom: 1px solid var(--border); padding: 12px 0; }
+        .info-row:last-child { border: none; }
+        .info-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; margin-bottom: 4px; }
+        .info-val { font-size: 16px; font-weight: 700; color: #fff; }
 
-        /* ГЛАВНЫЙ КОНТЕЙНЕР ПРИЛОЖЕНИЯ */
-        #app-frame {
-            position: relative;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .field-input { width: 100%; background: #1c1c1e; border: 1px solid var(--border); border-radius: 14px; padding: 16px; color: #fff; font-size: 16px; margin-bottom: 10px; outline: none; }
+        .btn-submit { width: 100%; padding: 20px; border-radius: 20px; border: none; font-weight: 900; font-size: 17px; background: #fff; color: #000; cursor: pointer; margin-top: 10px; }
 
-        /* МОБИЛЬНЫЙ РЕЖИМ (ПО УМОЛЧАНИЮ НА ВЕСЬ ЭКРАН) */
-        .is-phone #app-frame {
-            width: 100vw;
-            height: 100vh;
-            border-radius: 0;
-        }
-
-        /* ПК РЕЖИМ (РАМКА ТЕЛЕФОНА) */
-        .is-pc #app-frame {
-            width: 390px;
-            height: 844px;
-            border: 12px solid #2c2c2e;
-            border-radius: 55px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
-        }
-
-        header { padding: 60px 24px 10px; flex-shrink: 0; }
-        header h1 { font-size: 32px; margin: 0; font-weight: 800; }
-
-        .content { flex: 1; overflow-y: auto; padding: 0 20px 120px; }
         .screen { display: none; }
-        .screen.active { display: block; }
-
-        /* ФОРМЫ */
-        .form-card { background: var(--surface); padding: 20px; border-radius: 24px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-        input, select { width: 100%; background: #2c2c2e; border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: #fff; font-size: 15px; outline: none; }
-
-        /* ДИЗАЙН ID-КАРТЫ */
-        .id-render {
-            width: 100%; aspect-ratio: 1.58/1; background: linear-gradient(135deg, #d3e8f4, #a8cce4); 
-            border-radius: 15px; padding: 12px; color: #0b3d71; position: relative; border: 1px solid #9dbcd1;
-        }
-        .id-grid { display: grid; grid-template-columns: 85px 1fr; gap: 10px; margin-top: 10px; }
-        .id-photo { width: 85px; height: 110px; background: #fff; border-radius: 4px; background-size: cover; background-position: center; border: 0.5px solid #0b3d71; }
-        .id-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-        .f-label { color: #4b6a8a; text-transform: uppercase; font-size: 5px; line-height: 1; }
-        .f-val { font-weight: bold; font-size: 9px; margin-bottom: 2px; }
-
-        /* ДИЗАЙН УЧНІВСЬКОГО */
-        .student-render {
-            width: 100%; aspect-ratio: 1.58/1; background: #fff; border-radius: 20px; 
-            padding: 20px; color: #333; position: relative; overflow: hidden;
-        }
-
-        /* НАВИГАЦИЯ */
-        nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: rgba(10, 10, 12, 0.95); backdrop-filter: blur(20px); display: flex; border-top: 1px solid var(--border); }
-        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8e8e93; font-size: 10px; cursor: pointer; }
-        .nav-btn.active { color: #fff; }
-
-        .btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.7; }
-
-        /* МОДАЛКА */
-        .modal { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .hidden { display: none !important; }
+        .active-screen { display: block; }
     </style>
 </head>
-<body class="is-pc">
+<body>
 
-<div id="app-frame">
-    <header><h1>Документи</h1></header>
-    
-    <div class="content">
-        <section id="s-list" class="screen active"></section>
-        
-        <section id="s-add" class="screen">
-            <div class="form-card">
-                <select id="t">
-                    <option value="ID">ІД Картка (Повна)</option>
-                    <option value="STUD">Учнівський квиток</option>
-                    <option value="BIRTH">Форма 44 (Громадянство)</option>
-                    <option value="LOC">Додаток 13 (Проживання)</option>
-                </select>
-                <input type="text" id="l" placeholder="Прізвище">
-                <input type="text" id="f" placeholder="Ім'я">
-                <input type="text" id="p" placeholder="По батькові">
-                <input type="text" id="b" placeholder="Дата народження (дд.мм.гггг)">
-                <input type="text" id="d1" placeholder="Дата видачі (дд.мм.гггг)">
-                <input type="text" id="d2" placeholder="Дійсний до (дд.мм.гггг)">
-                <input type="text" id="loc" placeholder="Місце / Школа">
-                <input type="text" id="n" placeholder="Запис № / Номер">
-                <input type="text" id="img" placeholder="URL фото">
-                <button class="btn" style="background:#fff" onclick="core.add()">Створити</button>
-            </div>
+<div id="main-scroll">
+    <div class="container">
+        <section id="p-list" class="screen active-screen">
+            <h1>Мої документи</h1>
+            <div id="docs-list"></div>
         </section>
 
-        <section id="s-set" class="screen">
-            <div class="form-card">
-                <button class="btn" style="background:#fff" onclick="core.setMode('phone')">Мобільний вигляд (Full Screen)</button>
-                <button class="btn" style="background:#fff; margin-top:10px" onclick="core.setMode('pc')">ПК режим (Телефон)</button>
-                <button class="btn" style="background:#ff453a; color:#fff; margin-top:20px" onclick="core.clear()">Видалити всі дані</button>
+        <section id="p-add" class="screen">
+            <h1>Додати документ</h1>
+            <div style="background: var(--surface); padding: 25px; border-radius: 30px; border: 1px solid var(--border);">
+                <select class="field-input" id="type-sel" onchange="renderEditor()" style="background: var(--accent); color:#000; font-weight:800;">
+                    <option value="ID">ID-картка громадянина</option>
+                    <option value="PASS">Закордонний паспорт</option>
+                    <option value="STUD">Учнівський квиток</option>
+                    <option value="BIRTH">Свідоцтво про народження</option>
+                    <option value="MARR">Свідоцтво про шлюб</option>
+                    <option value="ADDR">Витяг про місце проживання</option>
+                </select>
+                <div id="editor-fields"></div>
+                <button class="btn-submit" onclick="saveDoc()" style="background: #fff;">Підтвердити видачу</button>
             </div>
         </section>
     </div>
-
-    <nav>
-        <div class="nav-btn active" onclick="core.tab('list')"><i data-lucide="layout-grid"></i>Документи</div>
-        <div class="nav-btn" onclick="core.tab('add')"><i data-lucide="plus-circle"></i>Додати</div>
-        <div class="nav-btn" onclick="core.tab('set')"><i data-lucide="settings"></i>Меню</div>
-    </nav>
 </div>
 
-<div id="m-view" class="modal hidden">
-    <div id="m-cont" style="width:100%; max-width:380px;"></div>
-    <div style="width:100%; max-width:300px; margin-top:25px; display:flex; flex-direction:column; gap:12px;">
-        <button class="btn" style="background:#fff" onclick="core.snap()">Зберегти PNG</button>
-        <button class="btn" style="color:#fff; background:none" onclick="core.close()">Закрити</button>
+<nav>
+    <div class="nav-pill">
+        <div id="n-list" class="nav-link active" onclick="go('list')"><i data-lucide="wallet"></i> Гаманець</div>
+        <div id="n-add" class="nav-link" onclick="go('add')"><i data-lucide="plus-circle"></i> Оформити</div>
     </div>
+</nav>
+
+<div id="doc-modal" class="modal">
+    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
+        <div style="font-weight:900; color:var(--accent); font-size:11px;">ЕЛЕКТРОННИЙ ДОКУМЕНТ</div>
+        <div onclick="closeModal()" style="cursor:pointer; font-weight:800; background:var(--surface); padding:8px 15px; border-radius:15px;">ЗАКРИТИ</div>
+    </div>
+    
+    <div id="capture-area" style="background:#000;">
+        <div id="modal-body"></div>
+    </div>
+
+    <button class="btn-submit" onclick="downloadAsImage()" style="background: var(--accent);"><i data-lucide="download"></i> Зберегти як PNG</button>
+    <button class="btn-submit" onclick="confirmDelete()" style="background: #ff453a; color: #fff; margin-bottom: 40px;">Анулювати документ</button>
 </div>
 
 <script>
-    const core = {
-        docs: JSON.parse(localStorage.getItem('DIIA_FINAL_V5') || '[]'),
+    let registry = JSON.parse(localStorage.getItem('diia_final_v1')) || [];
+    let currentDocId = null;
+
+    function go(id) {
+        document.querySelectorAll('.screen, .nav-link').forEach(el => el.classList.remove('active-screen', 'active'));
+        document.getElementById('p-' + id).classList.add('active-screen');
+        document.getElementById('n-' + id).classList.add('active');
+        if(id === 'add') renderEditor();
+        if(id === 'list') renderRegistry();
+        lucide.createIcons();
+    }
+
+    function renderEditor() {
+        const type = document.getElementById('type-sel').value;
+        const root = document.getElementById('editor-fields');
+        let html = `
+            <input class="field-input" id="f-last" placeholder="Прізвище">
+            <input class="field-input" id="f-first" placeholder="Ім'я">
+            <input class="field-input" id="f-mid" placeholder="По батькові">
+            <select class="field-input" id="f-sex">
+                <option value="Чоловіча / M">Стать: Чоловіча / M</option>
+                <option value="Жіноча / F">Стать: Жіноча / F</option>
+            </select>
+            <input class="field-input" id="f-birth" placeholder="Дата народження">
+        `;
+
+        if(type === 'ID' || type === 'PASS') {
+            html += `
+                <input class="field-input" id="f-unzr" placeholder="Запис № (УНЗР)">
+                <input class="field-input" id="f-num" placeholder="Номер документа">
+                <input class="field-input" id="f-org" placeholder="Орган видачі (Код)">
+                <input class="field-input" id="f-issued" placeholder="Дата видачі">
+                <input class="field-input" id="f-expire" placeholder="Дійсний до">
+            `;
+        } else if(type === 'STUD') {
+            html += `
+                <input class="field-input" id="f-school" placeholder="Назва навчального закладу">
+                <input class="field-input" id="f-class" placeholder="Клас">
+                <input class="field-input" id="f-num" placeholder="Номер квитка">
+            `;
+        } else if(type === 'BIRTH') {
+            html += `
+                <input class="field-input" id="f-num" placeholder="Серія та номер">
+                <input class="field-input" id="f-place" placeholder="Місце народження">
+                <input class="field-input" id="f-father" placeholder="ПІБ батька">
+                <input class="field-input" id="f-mother" placeholder="ПІБ матері">
+            `;
+        } else if(type === 'MARR') {
+            html += `
+                <input class="field-input" id="f-partner" placeholder="ПІБ другого з подружжя">
+                <input class="field-input" id="f-safter" placeholder="Прізвище після реєстрації">
+                <input class="field-input" id="f-num" placeholder="Серія та номер свідоцтва">
+                <input class="field-input" id="f-issued" placeholder="Дата реєстрації шлюбу">
+            `;
+        } else if(type === 'ADDR') {
+            html += `
+                <input class="field-input" id="f-address" placeholder="Вулиця, будинок, квартира">
+                <input class="field-input" id="f-city" placeholder="Населений пункт">
+                <input class="field-input" id="f-dist" placeholder="Район та Область">
+            `;
+        }
+        root.innerHTML = html;
+    }
+
+    function saveDoc() {
+        const data = {
+            id: Date.now(),
+            type: document.getElementById('type-sel').value,
+            l: document.getElementById('f-last').value,
+            f: document.getElementById('f-first').value,
+            m: document.getElementById('f-mid').value,
+            s: document.getElementById('f-sex').value,
+            b: document.getElementById('f-birth').value,
+            unzr: document.getElementById('f-unzr')?.value || '',
+            num: document.getElementById('f-num')?.value || '',
+            org: document.getElementById('f-org')?.value || '',
+            iss: document.getElementById('f-issued')?.value || '',
+            exp: document.getElementById('f-expire')?.value || '',
+            school: document.getElementById('f-school')?.value || '',
+            cls: document.getElementById('f-class')?.value || '',
+            partner: document.getElementById('f-partner')?.value || '',
+            safter: document.getElementById('f-safter')?.value || '',
+            addr: document.getElementById('f-address')?.value || '',
+            city: document.getElementById('f-city')?.value || '',
+            dist: document.getElementById('f-dist')?.value || ''
+        };
+        registry.push(data);
+        localStorage.setItem('diia_final_v1', JSON.stringify(registry));
+        go('list');
+    }
+
+    function renderRegistry() {
+        const root = document.getElementById('docs-list');
+        const labels = {ID:'ID-картка', PASS:'Закордонний', STUD:'Учнівський', BIRTH:'Свідоцтво', MARR:'Шлюб', ADDR:'Місце проживання'};
+        root.innerHTML = registry.map(d => `
+            <div class="doc-card-preview" onclick="openDoc(${d.id})">
+                <div class="preview-header">${labels[d.type]}</div>
+                <div class="preview-name">${d.l} ${d.f}</div>
+            </div>
+        `).join('') || '<div style="opacity:0.2; text-align:center; margin-top:50px;">У вашому гаманці поки порожньо</div>';
+    }
+
+    function openDoc(id) {
+        currentDocId = id;
+        const d = registry.find(x => x.id === id);
+        const titles = {ID:'ID-картка громадянина', PASS:'Закордонний паспорт', STUD:'Учнівський квиток', BIRTH:'Свідоцтво про народження', MARR:'Свідоцтво про шлюб', ADDR:'Витяг про проживання'};
+        const body = document.getElementById('modal-body');
         
-        init() { 
-            lucide.createIcons(); 
-            this.render(); 
-            this.setMode(localStorage.getItem('VIEW_MODE') || 'pc');
-        },
+        body.innerHTML = `
+            <div style="background: var(--card-grad); border-radius: 30px; padding: 30px; border: 1px solid var(--border);">
+                <div class="preview-header" style="font-size:12px;">${titles[d.type]}</div>
+                <div style="font-size: 28px; font-weight: 900; line-height: 1.1; margin-bottom: 20px; text-transform:uppercase;">${d.l}<br>${d.f}</div>
+                
+                <div class="info-block">
+                    <div class="info-row"><span class="info-label">ПІБ</span><div class="info-val">${d.l} ${d.f} ${d.m}</div></div>
+                    <div class="info-row"><span class="info-label">Стать / Sex</span><div class="info-val">${d.s}</div></div>
+                    <div class="info-row"><span class="info-label">Дата народження</span><div class="info-val">${d.b}</div></div>
+                    ${d.unzr ? `<div class="info-row"><span class="info-label">Запис № (УНЗР)</span><div class="info-val" style="color:var(--accent);">${d.unzr}</div></div>` : ''}
+                    ${d.num ? `<div class="info-row"><span class="info-label">Номер документа</span><div class="info-val">${d.num}</div></div>` : ''}
+                    ${d.partner ? `<div class="info-row"><span class="info-label">Другий з подружжя</span><div class="info-val">${d.partner}</div></div>` : ''}
+                    ${d.safter ? `<div class="info-row"><span class="info-label">Прізвище після шлюбу</span><div class="info-val">${d.safter}</div></div>` : ''}
+                    ${d.school ? `<div class="info-row"><span class="info-label">Школа</span><div class="info-val">${d.school}, ${d.cls} клас</div></div>` : ''}
+                </div>
 
-        setMode(mode) {
-            document.body.className = 'is-' + mode;
-            localStorage.setItem('VIEW_MODE', mode);
-        },
+                <div class="info-block">
+                    ${d.org ? `<div class="info-row"><span class="info-label">Орган видачі</span><div class="info-val">${d.org}</div></div>` : ''}
+                    ${d.iss ? `<div class="info-row"><span class="info-label">Дата видачі</span><div class="info-val">${d.iss}</div></div>` : ''}
+                    ${d.exp ? `<div class="info-row"><span class="info-label">Дійсний до</span><div class="info-val">${d.exp}</div></div>` : ''}
+                    ${d.addr ? `<div class="info-row"><span class="info-label">Адреса</span><div class="info-val">${d.addr}, ${d.city}</div></div>` : ''}
+                </div>
+            </div>
+        `;
+        document.getElementById('doc-modal').classList.add('active');
+        lucide.createIcons();
+    }
 
-        tab(id) { 
-            document.querySelectorAll('.screen, .nav-btn').forEach(el => el.classList.remove('active')); 
-            document.getElementById('s-'+id).classList.add('active'); 
-            event.currentTarget.classList.add('active'); 
-        },
+    function closeModal() { document.getElementById('doc-modal').classList.remove('active'); }
 
-        add() {
-            const d = { 
-                id: Date.now(), 
-                t: document.getElementById('t').value, 
-                l: document.getElementById('l').value || 'Савченко', 
-                f: document.getElementById('f').value || 'Олександр', 
-                p: document.getElementById('p').value || 'Олександрович', 
-                b: document.getElementById('b').value || '01.01.2010', 
-                d1: document.getElementById('d1').value || '01.01.2024', 
-                d2: document.getElementById('d2').value || '01.01.2034', 
-                loc: document.getElementById('loc').value || 'м. Київ', 
-                n: document.getElementById('n').value || '20100101-00123', 
-                img: document.getElementById('img').value || 'https://i.ibb.co/vz6m6mS/user.png' 
-            };
-            this.docs.push(d); 
-            localStorage.setItem('DIIA_FINAL_V5', JSON.stringify(this.docs)); 
-            this.render(); 
-            this.tab('list');
-        },
+    async function downloadAsImage() {
+        const area = document.getElementById('capture-area');
+        const canvas = await html2canvas(area, { backgroundColor: '#000', scale: 3 });
+        const link = document.createElement('a');
+        link.download = `diia_export_${Date.now()}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
 
-        render() {
-            const box = document.getElementById('s-list'); 
-            box.innerHTML = '';
-            this.docs.forEach(d => {
-                const el = document.createElement('div');
-                el.className = 'form-card';
-                el.style.marginBottom = '12px';
-                el.style.cursor = 'pointer';
-                el.innerHTML = `<div style="font-size:11px; color:var(--cyan); font-weight:bold;">${d.t}</div><b style="font-size:18px;">${d.l} ${d.f}</b>`;
-                el.onclick = () => this.show(d); 
-                box.prepend(el);
-            });
-        },
+    function confirmDelete() {
+        if(confirm('Ви впевнені, що хочете видалити цей документ?')) {
+            registry = registry.filter(x => x.id !== currentDocId);
+            localStorage.setItem('diia_final_v1', JSON.stringify(registry));
+            closeModal();
+            renderRegistry();
+        }
+    }
 
-        show(d) {
-            const cont = document.getElementById('m-cont');
-            if(d.t === 'ID') {
-                cont.innerHTML = `
-                <div class="id-render" id="draw">
-                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:7px; border-bottom:0.8px solid #0b3d71; padding-bottom:3px;">
-                        <span>УКРАЇНА UKRAINE</span><span>ПАСПОРТ ГРОМАДЯНИНА</span>
-                    </div>
-                    <div class="id-grid">
-                        <div class="id-photo" style="background-image:url('${d.img}')"></div>
-                        <div class="id-fields">
-                            <div style="grid-column: span 2;"><div class="f-label">Прізвище / Surname</div><div class="f-val">${d.l}</div></div>
-                            <div style="grid-column: span 2;"><div class="f-label">Ім'я / Name</div><div class="f-val">${d.f}</div></div>
-                            <div style="grid-column: span 2;"><div class="f-label">По батькові / Patronymic</div><div class="f-val">${d.p}</div></div>
-                            <div><div class="f-label">Стать / Sex</div><div class="f-val">Ч/M</div></div>
-                            <div><div class="f-label">Дата народж. / Date of birth</div><div class="f-val">${d.b}</div></div>
-                            <div><div class="f-label">Запис № / Record No</div><div class="f-val">${d.n}</div></div>
-                            <div><div class="f-label">Дійсний до / Date of expiry</div><div class="f-val">${d.d2}</div></div>
-                            <div style="grid-column: span 2;"><div class="f-label">Дата видачі / Date of issue</div><div class="f-val">${d.d1}</div></div>
-                        </div>
-                    </div>
-                </div>`;
-            } else if(d.t === 'STUD') {
-                cont.innerHTML = `
-                <div class="student-render" id="draw">
-                    <div style="position:absolute; top:20px; left:20px; width:100px; height:125px; border-radius:12px; background-image:url('${d.img}'); background-size:cover; background-position:center;"></div>
-                    <div style="margin-left:115px;">
-                        <div style="font-size:12px; color:#888; line-height:1.2;">${d.loc}</div>
-                        <div style="font-size:12px; color:#888; margin-bottom:10px;">Форма навчання: Денна</div>
-                        <div style="font-size:24px; font-weight:800; color:#000; line-height:1;">${d.l}<br>${d.f}</div>
-                        <div style="font-size:10px; color:#888; margin-top:10px;">Номер учнівського:</div>
-                        <div style="font-size:16px; font-weight:bold; color:#333;">${d.n}</div>
-                    </div>
-                    <div style="margin-top:20px; display:flex; justify-content:space-between; border-top:1px solid #eee; padding-top:10px;">
-                        <div><div style="font-size:10px; color:#888;">Виданий:</div><div style="font-size:12px; font-weight:bold;">30.06.2025</div></div>
-                        <div><div style="font-size:10px; color:#888;">Дійсний до:</div><div style="font-size:12px; font-weight:bold;">${d.d2}</div></div>
-                    </div>
-                </div>`;
-            } else {
-                const isBirth = d.t === 'BIRTH';
-                cont.innerHTML = `
-                <div style="background:#fff; color:#000; padding:25px; font-family:serif; font-size:10px;" id="draw">
-                    <div style="text-align:right"><b>${isBirth ? 'Форма 44' : 'Додаток 13'}</b></div>
-                    <div style="text-align:center; font-weight:bold; margin:20px 0; font-size:11px;">
-                        ${isBirth ? 'ДОВІДКА про реєстрацію особи громадянином України' : 'ДОВІДКА про реєстрацію місця проживання'}
-                    </div>
-                    Прізвище: <b>${d.l}</b><br>Ім'я: <b>${d.f}</b><br>По батькові: <b>${d.p}</b><br>
-                    Дата народження: <b>${d.b}</b><br>Місце: <b>${d.loc}</b><br>Запис №: <b>${d.n}</b><br><br>
-                    <div style="display:flex; justify-content:space-between; margin-top:30px;"><span>М.П.</span><span>Підпис: ________</span></div>
-                </div>`;
-            }
-            document.getElementById('m-view').classList.remove('hidden');
-        },
-
-        snap() { 
-            html2canvas(document.getElementById('draw'), { scale: 3, backgroundColor: null }).then(cv => { 
-                const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'diia_export.png'; a.click(); 
-            }); 
-        },
-        close() { document.getElementById('m-view').classList.add('hidden'); },
-        clear() { if(confirm("Видалити всі документи?")) { localStorage.clear(); location.reload(); } }
-    };
-    window.onload = () => core.init();
+    window.onload = () => { renderRegistry(); lucide.createIcons(); };
 </script>
 </body>
 </html>
