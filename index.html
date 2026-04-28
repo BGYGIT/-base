@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Дія — Документи</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #1c1c1e;
+            --border: rgba(255, 255, 255, 0.1);
+            --cyan: #00c7be;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
+        
+        /* Базовые стили для body */
+        body { 
+            background: #111; 
+            color: #fff; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            transition: background 0.3s;
+        }
+
+        /* ГЛАВНЫЙ КОНТЕЙНЕР ПРИЛОЖЕНИЯ */
+        #app-frame {
+            position: relative;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* МОБИЛЬНЫЙ РЕЖИМ (ПО УМОЛЧАНИЮ НА ВЕСЬ ЭКРАН) */
+        .is-phone #app-frame {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        /* ПК РЕЖИМ (РАМКА ТЕЛЕФОНА) */
+        .is-pc #app-frame {
+            width: 390px;
+            height: 844px;
+            border: 12px solid #2c2c2e;
+            border-radius: 55px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        }
+
+        header { padding: 60px 24px 10px; flex-shrink: 0; }
+        header h1 { font-size: 32px; margin: 0; font-weight: 800; }
+
+        .content { flex: 1; overflow-y: auto; padding: 0 20px 120px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ФОРМЫ */
+        .form-card { background: var(--surface); padding: 20px; border-radius: 24px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        input, select { width: 100%; background: #2c2c2e; border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: #fff; font-size: 15px; outline: none; }
+
+        /* ДИЗАЙН ID-КАРТЫ */
+        .id-render {
+            width: 100%; aspect-ratio: 1.58/1; background: linear-gradient(135deg, #d3e8f4, #a8cce4); 
+            border-radius: 15px; padding: 12px; color: #0b3d71; position: relative; border: 1px solid #9dbcd1;
+        }
+        .id-grid { display: grid; grid-template-columns: 85px 1fr; gap: 10px; margin-top: 10px; }
+        .id-photo { width: 85px; height: 110px; background: #fff; border-radius: 4px; background-size: cover; background-position: center; border: 0.5px solid #0b3d71; }
+        .id-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .f-label { color: #4b6a8a; text-transform: uppercase; font-size: 5px; line-height: 1; }
+        .f-val { font-weight: bold; font-size: 9px; margin-bottom: 2px; }
+
+        /* ДИЗАЙН УЧНІВСЬКОГО */
+        .student-render {
+            width: 100%; aspect-ratio: 1.58/1; background: #fff; border-radius: 20px; 
+            padding: 20px; color: #333; position: relative; overflow: hidden;
+        }
+
+        /* НАВИГАЦИЯ */
+        nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: rgba(10, 10, 12, 0.95); backdrop-filter: blur(20px); display: flex; border-top: 1px solid var(--border); }
+        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8e8e93; font-size: 10px; cursor: pointer; }
+        .nav-btn.active { color: #fff; }
+
+        .btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.7; }
+
+        /* МОДАЛКА */
+        .modal { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="is-pc">
+
+<div id="app-frame">
+    <header><h1>Документи</h1></header>
+    
+    <div class="content">
+        <section id="s-list" class="screen active"></section>
+        
+        <section id="s-add" class="screen">
+            <div class="form-card">
+                <select id="t">
+                    <option value="ID">ІД Картка (Повна)</option>
+                    <option value="STUD">Учнівський квиток</option>
+                    <option value="BIRTH">Форма 44 (Громадянство)</option>
+                    <option value="LOC">Додаток 13 (Проживання)</option>
+                </select>
+                <input type="text" id="l" placeholder="Прізвище">
+                <input type="text" id="f" placeholder="Ім'я">
+                <input type="text" id="p" placeholder="По батькові">
+                <input type="text" id="b" placeholder="Дата народження (дд.мм.гггг)">
+                <input type="text" id="d1" placeholder="Дата видачі (дд.мм.гггг)">
+                <input type="text" id="d2" placeholder="Дійсний до (дд.мм.гггг)">
+                <input type="text" id="loc" placeholder="Місце / Школа">
+                <input type="text" id="n" placeholder="Запис № / Номер">
+                <input type="text" id="img" placeholder="URL фото">
+                <button class="btn" style="background:#fff" onclick="core.add()">Створити</button>
+            </div>
+        </section>
+
+        <section id="s-set" class="screen">
+            <div class="form-card">
+                <button class="btn" style="background:#fff" onclick="core.setMode('phone')">Мобільний вигляд (Full Screen)</button>
+                <button class="btn" style="background:#fff; margin-top:10px" onclick="core.setMode('pc')">ПК режим (Телефон)</button>
+                <button class="btn" style="background:#ff453a; color:#fff; margin-top:20px" onclick="core.clear()">Видалити всі дані</button>
+            </div>
+        </section>
+    </div>
+
+    <nav>
+        <div class="nav-btn active" onclick="core.tab('list')"><i data-lucide="layout-grid"></i>Документи</div>
+        <div class="nav-btn" onclick="core.tab('add')"><i data-lucide="plus-circle"></i>Додати</div>
+        <div class="nav-btn" onclick="core.tab('set')"><i data-lucide="settings"></i>Меню</div>
+    </nav>
+</div>
+
+<div id="m-view" class="modal hidden">
+    <div id="m-cont" style="width:100%; max-width:380px;"></div>
+    <div style="width:100%; max-width:300px; margin-top:25px; display:flex; flex-direction:column; gap:12px;">
+        <button class="btn" style="background:#fff" onclick="core.snap()">Зберегти PNG</button>
+        <button class="btn" style="color:#fff; background:none" onclick="core.close()">Закрити</button>
+    </div>
+</div>
+
+<script>
+    const core = {
+        docs: JSON.parse(localStorage.getItem('DIIA_FINAL_V5') || '[]'),
+        
+        init() { 
+            lucide.createIcons(); 
+            this.render(); 
+            this.setMode(localStorage.getItem('VIEW_MODE') || 'pc');
+        },
+
+        setMode(mode) {
+            document.body.className = 'is-' + mode;
+            localStorage.setItem('VIEW_MODE', mode);
+        },
+
+        tab(id) { 
+            document.querySelectorAll('.screen, .nav-btn').forEach(el => el.classList.remove('active')); 
+            document.getElementById('s-'+id).classList.add('active'); 
+            event.currentTarget.classList.add('active'); 
+        },
+
+        add() {
+            const d = { 
+                id: Date.now(), 
+                t: document.getElementById('t').value, 
+                l: document.getElementById('l').value || 'Савченко', 
+                f: document.getElementById('f').value || 'Олександр', 
+                p: document.getElementById('p').value || 'Олександрович', 
+                b: document.getElementById('b').value || '01.01.2010', 
+                d1: document.getElementById('d1').value || '01.01.2024', 
+                d2: document.getElementById('d2').value || '01.01.2034', 
+                loc: document.getElementById('loc').value || 'м. Київ', 
+                n: document.getElementById('n').value || '20100101-00123', 
+                img: document.getElementById('img').value || 'https://i.ibb.co/vz6m6mS/user.png' 
+            };
+            this.docs.push(d); 
+            localStorage.setItem('DIIA_FINAL_V5', JSON.stringify(this.docs)); 
+            this.render(); 
+            this.tab('list');
+        },
+
+        render() {
+            const box = document.getElementById('s-list'); 
+            box.innerHTML = '';
+            this.docs.forEach(d => {
+                const el = document.createElement('div');
+                el.className = 'form-card';
+                el.style.marginBottom = '12px';
+                el.style.cursor = 'pointer';
+                el.innerHTML = `<div style="font-size:11px; color:var(--cyan); font-weight:bold;">${d.t}</div><b style="font-size:18px;">${d.l} ${d.f}</b>`;
+                el.onclick = () => this.show(d); 
+                box.prepend(el);
+            });
+        },
+
+        show(d) {
+            const cont = document.getElementById('m-cont');
+            if(d.t === 'ID') {
+                cont.innerHTML = `
+                <div class="id-render" id="draw">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:7px; border-bottom:0.8px solid #0b3d71; padding-bottom:3px;">
+                        <span>УКРАЇНА UKRAINE</span><span>ПАСПОРТ ГРОМАДЯНИНА</span>
+                    </div>
+                    <div class="id-grid">
+                        <div class="id-photo" style="background-image:url('${d.img}')"></div>
+                        <div class="id-fields">
+                            <div style="grid-column: span 2;"><div class="f-label">Прізвище / Surname</div><div class="f-val">${d.l}</div></div>
+                            <div style="grid-column: span 2;"><div class="f-label">Ім'я / Name</div><div class="f-val">${d.f}</div></div>
+                            <div style="grid-column: span 2;"><div class="f-label">По батькові / Patronymic</div><div class="f-val">${d.p}</div></div>
+                            <div><div class="f-label">Стать / Sex</div><div class="f-val">Ч/M</div></div>
+                            <div><div class="f-label">Дата народж. / Date of birth</div><div class="f-val">${d.b}</div></div>
+                            <div><div class="f-label">Запис № / Record No</div><div class="f-val">${d.n}</div></div>
+                            <div><div class="f-label">Дійсний до / Date of expiry</div><div class="f-val">${d.d2}</div></div>
+                            <div style="grid-column: span 2;"><div class="f-label">Дата видачі / Date of issue</div><div class="f-val">${d.d1}</div></div>
+                        </div>
+                    </div>
+                </div>`;
+            } else if(d.t === 'STUD') {
+                cont.innerHTML = `
+                <div class="student-render" id="draw">
+                    <div style="position:absolute; top:20px; left:20px; width:100px; height:125px; border-radius:12px; background-image:url('${d.img}'); background-size:cover; background-position:center;"></div>
+                    <div style="margin-left:115px;">
+                        <div style="font-size:12px; color:#888; line-height:1.2;">${d.loc}</div>
+                        <div style="font-size:12px; color:#888; margin-bottom:10px;">Форма навчання: Денна</div>
+                        <div style="font-size:24px; font-weight:800; color:#000; line-height:1;">${d.l}<br>${d.f}</div>
+                        <div style="font-size:10px; color:#888; margin-top:10px;">Номер учнівського:</div>
+                        <div style="font-size:16px; font-weight:bold; color:#333;">${d.n}</div>
+                    </div>
+                    <div style="margin-top:20px; display:flex; justify-content:space-between; border-top:1px solid #eee; padding-top:10px;">
+                        <div><div style="font-size:10px; color:#888;">Виданий:</div><div style="font-size:12px; font-weight:bold;">30.06.2025</div></div>
+                        <div><div style="font-size:10px; color:#888;">Дійсний до:</div><div style="font-size:12px; font-weight:bold;">${d.d2}</div></div>
+                    </div>
+                </div>`;
+            } else {
+                const isBirth = d.t === 'BIRTH';
+                cont.innerHTML = `
+                <div style="background:#fff; color:#000; padding:25px; font-family:serif; font-size:10px;" id="draw">
+                    <div style="text-align:right"><b>${isBirth ? 'Форма 44' : 'Додаток 13'}</b></div>
+                    <div style="text-align:center; font-weight:bold; margin:20px 0; font-size:11px;">
+                        ${isBirth ? 'ДОВІДКА про реєстрацію особи громадянином України' : 'ДОВІДКА про реєстрацію місця проживання'}
+                    </div>
+                    Прізвище: <b>${d.l}</b><br>Ім'я: <b>${d.f}</b><br>По батькові: <b>${d.p}</b><br>
+                    Дата народження: <b>${d.b}</b><br>Місце: <b>${d.loc}</b><br>Запис №: <b>${d.n}</b><br><br>
+                    <div style="display:flex; justify-content:space-between; margin-top:30px;"><span>М.П.</span><span>Підпис: ________</span></div>
+                </div>`;
+            }
+            document.getElementById('m-view').classList.remove('hidden');
+        },
+
+        snap() { 
+            html2canvas(document.getElementById('draw'), { scale: 3, backgroundColor: null }).then(cv => { 
+                const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'diia_export.png'; a.click(); 
+            }); 
+        },
+        close() { document.getElementById('m-view').classList.add('hidden'); },
+        clear() { if(confirm("Видалити всі документи?")) { localStorage.clear(); location.reload(); } }
+    };
+    window.onload = () => core.init();
+</script>
+</body>
+</html>
